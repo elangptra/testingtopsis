@@ -37,7 +37,6 @@
         <div class="card-body">
             @if (auth()->user()->level == 'admin')
                 <a href="{{ route('kriteria.create') }}" class="btn btn-primary mb-3 ml-3">Tambah Kriteria</a>
-                <a class="btn btn-success right mb-3" href="{{ route('kriteria') }}">Tampilkan semua Kriteria</a>
             @endif
             <form class="form-left my-2" method="get" action="{{ route('kriteria.search') }}">
                 <div class="input-group mb-3 col-12 col-sm-8 col-md-6">

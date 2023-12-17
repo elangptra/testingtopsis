@@ -12,40 +12,42 @@ class PerhitunganController extends Controller
 
     public function index()
     {
-        $pembagi = $this->matriksPembagi();
         $data = $this->normalisasiNilaiAlternatif();
-        $data_V = $this->elemenMatriksTertimbang();
+        $data_pembagi = $this->pembagiNM();
+        $data_V = $this->normalisasiTerbobot();
         $data_G = $this->matrikAreaPerkiraanPerbatasanG();
         $data_Q = $this->matrikJarakPerkiraanPerbatasanQ();
-        return view('normalisasi.index', array_merge($pembagi, $data, $data_V, $data_G, $data_Q));
+        return view('normalisasi.index', array_merge($data, $data_pembagi, $data_V, $data_G, $data_Q));
     }
 
-    public function matriksPembagi()
+    function pembagiNM()
     {
         // Mendapatkan semua data kriteria dari database
         $kriterias = Kriteria::all();
         $nilaiAlts = NilaiAlt::all();
-        $alternatifs = Alternatif::all();
 
-        // $nilaiAltsKriteria = NilaiAlt::where('kode_krit', $kriterias->kode_kriteria)->get();
-        $pembagi = [];
-        $kuadratKriteria = [];
+        $hasil = [];
 
-        foreach($kriterias as $kriteria) {
-            foreach($nilaiAlts as $nilai) {
-                for ($i = 0; $i < count($kriterias); $i++) {
-                    $kuadratKriteria[$i] = 0;
-                    for ($j = 0; $j < count($alternatifs); $j++) {
-                        $kuadratKriteria[$i] += pow($nilai->value[$j][$i], 2);
-                    }
-                    // Menghitung akar kuadrat dari jumlah kuadrat kriteria
-                    $pembagi[$i] = sqrt($kuadratKriteria[$i]);
-                }
+        foreach ($kriterias as $kriteria) {
+            $nilaiAltsKriteria = NilaiAlt::where('kode_krit', $kriteria->kode_kriteria)->get();
+            $hasilPangkat = 1;
+
+            foreach ($nilaiAltsKriteria as $nilaiAlt) {
+                $rumus = pow($nilaiAlt->value, 2);
+                $normalisasi[$nilaiAlt->kode_krit][$nilaiAlt->kode_alt] = $rumus;
+            }
+
+            $total = 0;
+
+            foreach ($normalisasi[$nilaiAlt->kode_krit] as $value) {
+                $total += $value;
+            }
+
+            $hasil[$nilaiAlt->kode_krit] = sqrt($total);
         }
-            dd($pembagi);
-            return compact('alternatifs', 'kriterias', 'nilaiAlts', 'pembagi');
-        }
+        return compact('kriterias', 'nilaiAlts', 'hasil');
     }
+
 
     public function normalisasiNilaiAlternatif()
     {
@@ -56,57 +58,46 @@ class PerhitunganController extends Controller
 
         $normalisasi = [];
 
+        $data = $this->pembagiNM();
+
         foreach ($kriterias as $kriteria) {
             // Mendapatkan nilai alternatif untuk kriteria tertentu
             $nilaiAltsKriteria = NilaiAlt::where('kode_krit', $kriteria->kode_kriteria)->get();
-
-            // Mendapatkan nilai maksimum dan minimum untuk kriteria tersebut
-            $maxValue = $nilaiAltsKriteria->max('value');
-            $minValue = $nilaiAltsKriteria->min('value');
-
             // Normalisasi nilai alternatif berdasarkan tipe kriteria
             foreach ($nilaiAltsKriteria as $nilaiAlt) {
-                if ($kriteria->attribute == 'benefit') {
-                    $hitung = ($nilaiAlt->value - $minValue) / ($maxValue - $minValue);
-                } else if ($kriteria->attribute == 'cost') {
-                    $hitung = ($nilaiAlt->value - $maxValue) / ($minValue - $maxValue);
-                }
-                $normalisasi[$nilaiAlt->kode_krit][$nilaiAlt->kode_alt] = $hitung; // Store the result in the $normalisasi array
+                $data['hasil'][$nilaiAlt->kode_krit]; // Store the result in the $normalisasi array
+                $normalisasi[$nilaiAlt->kode_alt][$nilaiAlt->kode_krit] = $nilaiAlt->value / $data['hasil'][$nilaiAlt->kode_krit];
             }
         }
         return compact('alternatifs', 'kriterias', 'nilaiAlts', 'normalisasi');
     }
 
-    public function elemenMatriksTertimbang()
+    public function normalisasiTerbobot()
     {
         $kriterias = Kriteria::all();
         $nilaiAlts = NilaiAlt::all();
         $alternatifs = Alternatif::all();
-        $v = [];
+        $y = [];
 
         $data = $this->normalisasiNilaiAlternatif();
 
         foreach ($alternatifs as $alternatif) {
-            $v[$alternatif->kode_alternatif] = []; // Inisialisasi array untuk setiap alternatif
+            $y[$alternatif->kode_alternatif] = []; // Inisialisasi array untuk setiap alternatif
 
             foreach ($kriterias as $kriteria) {
                 $nilaiAlt = NilaiAlt::where('kode_krit', $kriteria->kode_kriteria)
                     ->where('kode_alt', $alternatif->kode_alternatif)->get();
-
                 // Periksa apakah kunci ada dalam array sebelum mengaksesnya
-                if (isset($data['normalisasi'][$kriteria->kode_kriteria][$alternatif->kode_alternatif])) {
+                if (isset($data['normalisasi'][$alternatif->kode_alternatif][$kriteria->kode_kriteria])) {
                     // Hitung matriks tertimbang (V) untuk setiap alternatif dan kriteria
-                    $bobot_100 = $kriteria->bobot_kriteria / 100;
-                    $v[$alternatif->kode_alternatif][$kriteria->kode_kriteria] =
-                        ($bobot_100 * $data['normalisasi'][$kriteria->kode_kriteria][$alternatif->kode_alternatif]) + $bobot_100;
+                    $bobot = $kriteria->bobot_kriteria;
+                    $y[$alternatif->kode_alternatif][$kriteria->kode_kriteria] =
+                        ($bobot * $data['normalisasi'][$alternatif->kode_alternatif][$kriteria->kode_kriteria]);
                 } else {
                 }
             }
         }
-
-        // Tambahkan pernyataan dd untuk melihat nilai variabel 'v'
-        // dd($v);
-        return compact('alternatifs', 'kriterias', 'nilaiAlts', 'v');
+        return compact('alternatifs', 'kriterias', 'nilaiAlts', 'y');
     }
 
     public function matrikAreaPerkiraanPerbatasanG()
@@ -114,30 +105,39 @@ class PerhitunganController extends Controller
         $kriterias = Kriteria::all();
         $nilaiAlts = NilaiAlt::all();
         $alternatifs = Alternatif::all();
-        $data = $this->elemenMatriksTertimbang();
-        $g = [];
-        $count_alt = Alternatif::count();
+        $data = $this->normalisasiTerbobot();
+        $benefit_Aplus = [];
+        $benefit_Amin = [];
+
+        $cost_Aplus = [];
+        $cost_Amin = [];
+        
         foreach ($kriterias as $kriteria) {
-            $result = 1; // Initialize $result for each kriteria
-            foreach ($alternatifs as $alternatif) {
-                if (isset($data['v'][$alternatif->kode_alternatif][$kriteria->kode_kriteria])) {
-                    $value_v = $data['v'][$alternatif->kode_alternatif][$kriteria->kode_kriteria];
-                    $result *= $value_v;
-                } else {
-                }
-                // dd($value_v);
-                // dd($data['v']);
+            // Mendapatkan nilai alternatif untuk kriteria tertentu
+            $values = $data['y'];
+
+            if ($kriteria->attribute == 'benefit') {
+                $maxValue = max($values[$kriteria->kode_kriteria]);
+                $minValue = min($values[$kriteria->kode_kriteria]);
+                $benefit_Aplus[$kriteria->kode_kriteria] = $maxValue;
+                $benefit_Amin[$kriteria->kode_kriteria] = $minValue;
+            } elseif ($kriteria->attribute == 'cost') {
+                $maxValue = max($values[$kriteria->kode_kriteria]);
+                $minValue = min($values[$kriteria->kode_kriteria]);
+                $cost_Aplus[$kriteria->kode_kriteria] = $minValue;
+                $cost_Amin[$kriteria->kode_kriteria] = $maxValue;
             }
-            $g[$kriteria->kode_kriteria] = pow($result, 1 / $count_alt);
         }
-        return compact('alternatifs', 'kriterias', 'nilaiAlts', 'g');
+        dd($benefit_Aplus);
+        return compact('alternatifs', 'kriterias', 'nilaiAlts', 'benefit_Aplus', 'benefit_Amin', 'cost_Aplus', 'cost_Amin');
     }
+
 
     public function matrikJarakPerkiraanPerbatasanQ()
     {
         $kriterias = Kriteria::all();
         $alternatifs = Alternatif::all();
-        $data_V = $this->elemenMatriksTertimbang();
+        $data_V = $this->normalisasiTerbobot();
         $data_G = $this->matrikAreaPerkiraanPerbatasanG();
         $q = [];
 

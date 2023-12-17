@@ -4,11 +4,8 @@
 
 @section('contents')
     <div class="container">
+
         <h2>Menghitung Matriks Pembagi</h2>
-
-        {{-- Add this section to inspect variables --}}
-        {{-- {{ dd($normalisasi, $kriterias, $alternatifs) }} --}}
-
         <table class="table table-striped">
             <thead class="thead-dark">
                 <tr>
@@ -18,18 +15,13 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($pembagi as $index => $nilai)
-                    <tr>
-                        <td>{{ number_format($nilai, 2) }}</td>
-                    </tr>
+                @foreach ($hasil as $index => $nilai)
+                    <td style="text-align: center;">{{ number_format($nilai, 3) }}</td>
                 @endforeach
+            </tbody>
         </table>
 
         <h2>Normalisasi Nilai Alternatif</h2>
-
-        {{-- Add this section to inspect variables --}}
-        {{-- {{ dd($normalisasi, $kriterias, $alternatifs) }} --}}
-
         <table class="table table-striped">
             <thead class="thead-dark">
                 <tr>
@@ -45,9 +37,9 @@
                         <td style="text-align: center;">{{ $alternatif->nama_alternatif }}</td>
                         @foreach ($kriterias as $kriteria)
                             {{-- Check if the key exists in the $normalisasi array --}}
-                            @if (isset($normalisasi[$kriteria->kode_kriteria][$alternatif->kode_alternatif]))
+                            @if (isset($normalisasi[$alternatif->kode_alternatif][$kriteria->kode_kriteria]))
                                 <td style="text-align: center;">
-                                    {{ number_format($normalisasi[$kriteria->kode_kriteria][$alternatif->kode_alternatif], 3, ',', '.') }}
+                                    {{ number_format($normalisasi[$alternatif->kode_alternatif][$kriteria->kode_kriteria], 3, ',', '.') }}
                                 </td>
                             @else
                                 <td style="text-align: center;">-</td>
@@ -57,10 +49,8 @@
                 @endforeach
             </tbody>
         </table>
-        <h2>Elemen Matriks Tertimbang (V)</h2>
-        {{-- Tambahkan ini untuk memeriksa data yang dikirim ke view --}}
-        {{-- {{ dd($alternatifs, $kriterias, $nilaiAlts, $v) }} --}}
 
+        <h2>Normalisasi Nilai Alternatif Terbobot</h2>
         <table class="table table-striped">
             <thead class="thead-dark">
                 <tr>
@@ -75,11 +65,10 @@
                     <tr>
                         <td style="text-align: center;">{{ $alternatif->nama_alternatif }}</td>
                         @foreach ($kriterias as $kriteria)
-                            {{-- Pengecekan keberadaan kunci --}}
-                            @if (isset($v[$alternatif->kode_alternatif]) && isset($v[$alternatif->kode_alternatif][$kriteria->kode_kriteria]))
-                                {{-- Pastikan bahwa $v[$alternatif->kode_alternatif][$kriteria->kode_kriteria] berisi nilai --}}
+                            {{-- Check if the key exists in the $normalisasi array --}}
+                            @if (isset($y[$alternatif->kode_alternatif][$kriteria->kode_kriteria]))
                                 <td style="text-align: center;">
-                                    {{ number_format($v[$alternatif->kode_alternatif][$kriteria->kode_kriteria], 5, ',', '.') }}
+                                    {{ number_format($y[$alternatif->kode_alternatif][$kriteria->kode_kriteria], 3, ',', '.') }}
                                 </td>
                             @else
                                 <td style="text-align: center;">-</td>
@@ -89,11 +78,12 @@
                 @endforeach
             </tbody>
         </table>
-        <h2>Matriks Area Perkiraan Perbatasan (G)</h2>
+
+        <h1>Menentukan Solusi Ideal Positif (A+) dan Matriks Ideal Negatif (A-)</h1>
         <table class="table table-striped">
             <thead class="thead-dark">
                 <tr>
-                    <th></th>
+                    <th>Type</th>
                     @foreach ($kriterias as $kriteria)
                         <th>{{ $kriteria->kode_kriteria_as_string }}</th>
                     @endforeach
@@ -101,20 +91,36 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>G</td>
+                    <td>A+</td>
                     @foreach ($kriterias as $kriteria)
-                        {{-- Pengecekan keberadaan kunci --}}
-                        @if (isset($g[$kriteria->kode_kriteria]))
-                            {{-- Pastikan bahwa $g[$kriteria->kode_kriteria] berisi nilai --}}
-                            <td>{{ number_format($g[$kriteria->kode_kriteria], 5, ',', '.') }}</td>
+                        {{-- Pengecekan keberadaan atribut 'benefit' --}}
+                        @if ($kriteria->attribute == 'benefit')
+                            {{-- Pastikan bahwa $benefit_Aplus[$kriteria->kode_kriteria] berisi nilai --}}
+                            <td>{{ number_format($benefit_Aplus[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
+                        @elseif ($kriteria->attribute == 'cost')
+                            <td>{{ number_format($cost_Amin[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
                         @else
                             <td>-</td>
                         @endif
                     @endforeach
                 </tr>
-            </tbody>
+                <tr>
+                    <td>A-</td>
+                    @foreach ($kriterias as $kriteria)
+                        {{-- Pengecekan keberadaan atribut 'benefit' --}}
+                        @if ($kriteria->attribute == 'benefit')
+                            {{-- Pastikan bahwa $benefit_Amin[$kriteria->kode_kriteria] berisi nilai --}}
+                            <td>{{ number_format($benefit_Amin[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
+                        @elseif ($kriteria->attribute == 'cost')
+                            <td>{{ number_format($cost_Aplus[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
+                        @else
+                            <td>-</td>
+                        @endif
+                    @endforeach
+                </tr>
+            </tbody>           
         </table>
-        </table>
+
         <h2>Matriks Jarak Alternatif Dari Daerah Perkiraan Perbatasan (Q)</h2>
         <table class="table table-striped">
             <thead class="thead-dark">

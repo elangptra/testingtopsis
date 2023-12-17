@@ -37,7 +37,6 @@
     <div class="card-body">
         @if (auth()->user()->level == 'admin')
         <a href="{{ route('alternatif.create') }}" class="btn btn-primary mb-3 ml-3">Tambah Alternatif</a>
-        <a class="btn btn-success right mb-3" href="{{ route('alternatif') }}">Tampilkan semua Alternatif</a>
         @endif
         <form class="form-left my-2" method="get" action="{{ route('alternatif.search') }}">
             <div class="input-group mb-3 col-12 col-sm-8 col-md-6" >
