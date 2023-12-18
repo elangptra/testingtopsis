@@ -131,17 +131,11 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($alternatifs as $alternatif)
+                @foreach ($Dplus as $alternatif => $jarak)
                     <tr>
-                        <td style="text-align: center;">{{ $alternatif->nama_alternatif }}</td>
-                        @foreach ($Dplus as $dpl)
+                        <td style="text-align: center;">Alternatif {{ $alternatif }}</td>
                             {{-- Check if the key exists in the $normalisasi array --}}
-                            @if (isset($normalisasi[$alternatif->kode_alternatif][$kriteria->kode_kriteria]))
-                                <td>{{ number_format($dpl, 3) }}</td>
-                            @else
-                                <td style="text-align: center;">-</td>
-                            @endif
-                        @endforeach
+                        <td style="text-align: center;"> {{ $jarak }}</td> 
                     </tr>
                 @endforeach
             </tbody>

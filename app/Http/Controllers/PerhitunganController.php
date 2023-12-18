@@ -18,7 +18,10 @@ class PerhitunganController extends Controller
         $solusiIdealPositif = $this->solusiIdealPositif();
         $solusiIdealNegatif = $this->solusiIdealNegatif();
         $jarakSolusiIdealPositif = $this->jarakSolusiIdealPositif();
-        return view('normalisasi.index', array_merge($data, $data_pembagi, $normalisasiTerbobot, $solusiIdealPositif, $solusiIdealNegatif,$jarakSolusiIdealPositif));
+        $jarakSolusiIdealNegatif = $this->jarakSolusiIdealNegatif();
+        $nilaiPreferensi = $this->nilaiPreferensi();
+        $rankingAlternatif = $this->rankingAlternatif();
+        return view('normalisasi.index', array_merge($data, $data_pembagi, $normalisasiTerbobot, $solusiIdealPositif, $solusiIdealNegatif, $jarakSolusiIdealPositif, $jarakSolusiIdealNegatif, $nilaiPreferensi, $rankingAlternatif));
     }
 
     function pembagiNM()
@@ -206,38 +209,76 @@ class PerhitunganController extends Controller
                 $jarak += pow(($val[$j] - $result[$j][$i]), 2);
             }
             $Dplus[$i] = number_format(sqrt($jarak), 3);
-
         }
         // dd($Dplus);
         return compact('Dplus');
     }
-    public function countHasilQ($q)
-    {
-        $hasilQ = [];
 
-        foreach ($q as $alternatif => $kriteriaValues) {
-            $totalQ = 0;
-
-            foreach ($kriteriaValues as $nilaiQ) {
-                $totalQ += ($nilaiQ);
-            }
-            $hasilQ[$alternatif] = $totalQ;
-        }
-        return $hasilQ;
-    }
-
-    public function RankingAlternatifs()
+    public function jarakSolusiIdealNegatif()
     {
         $kriterias = Kriteria::all();
-        $alternatifs = Alternatif::all();
-        $data_Q = $this->jarakSolusiIdealPositif();
-        $rank = $this->countHasilQ($data_Q['q']);
+        $data = $this->normalisasiTerbobot();
+        $data2 = $this->solusiIdealNegatif();
 
+        $values = $data['y'];
+        $val = $data2['Amin'];
+
+        $result = [];
+        foreach ($values as $rowIndex => $row) {
+            foreach ($row as $colIndex => $value) {
+                $result[$colIndex][$rowIndex] = $value;
+            }
+        }
+
+        $Dmin = [];
+        for ($i = 1; $i <= count($result[1]); $i++) {
+            $jarak = 0;
+
+            for ($j = 1; $j <= count($result); $j++) {
+                $jarak += pow(($result[$j][$i] - $val[$j]), 2);
+            }
+            $Dmin[$i] = number_format(sqrt($jarak), 3);
+        }
+        // dd($Dmin);
+        return compact('Dmin');
+    }
+
+    public function nilaiPreferensi()
+    {
+        $kriterias = Kriteria::all();
+        $data = $this->normalisasiTerbobot();
+        $data2 = $this->jarakSolusiIdealNegatif();
+        $data3 = $this->jarakSolusiIdealPositif();
+
+        $valMin = $data2['Dmin'];
+        $valPlus = $data3['Dplus'];
+
+        $preferensi = [];
+        for ($i = 1; $i <= count($valPlus); $i++) {
+            $preferensi[$i] = number_format($valMin[$i] / ($valPlus[$i] + $valMin[$i]), 3);
+        }
+        // dd($preferensi);
+        return compact('preferensi');
+    }
+
+    public function rankingAlternatif()
+    {
+        $kriterias = Kriteria::all();
+        $data = $this->nilaiPreferensi();
+        $data2 = $this->jarakSolusiIdealNegatif();
+        $data3 = $this->jarakSolusiIdealPositif();
+
+        $val = $data['preferensi'];
+        arsort($val);
+
+        // Assign new rankings
         $rank = [];
-
-        $rank = $this->countHasilQ($data_Q['q']);
-        arsort($rank);
-        $sortedRank = $rank;
-        return view('normalisasi.hasil', compact('alternatifs', 'kriterias', 'data_Q', 'sortedRank', 'rank'));
+        $rankingValue = 1;
+        foreach ($val as $alternatifId => $totalRanking) {
+            $rank[$alternatifId] = $rankingValue;
+            $rankingValue++;
+        }
+        // dd($rank);
+        return compact('rank');
     }
 }
