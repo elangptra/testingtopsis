@@ -14,10 +14,11 @@ class PerhitunganController extends Controller
     {
         $data = $this->normalisasiNilaiAlternatif();
         $data_pembagi = $this->pembagiNM();
-        $data_V = $this->normalisasiTerbobot();
-        $data_G = $this->matrikAreaPerkiraanPerbatasanG();
+        $normalisasiTerbobot = $this->normalisasiTerbobot();
+        $solusiIdealPositif = $this->solusiIdealPositif();
+        $solusiIdealNegatif = $this->solusiIdealNegatif();
         $data_Q = $this->matrikJarakPerkiraanPerbatasanQ();
-        return view('normalisasi.index', array_merge($data, $data_pembagi, $data_V, $data_G, $data_Q));
+        return view('normalisasi.index', array_merge($data, $data_pembagi, $normalisasiTerbobot, $solusiIdealPositif, $solusiIdealNegatif, $data_Q));
     }
 
     function pembagiNM()
@@ -100,36 +101,84 @@ class PerhitunganController extends Controller
         return compact('alternatifs', 'kriterias', 'nilaiAlts', 'y');
     }
 
-    public function matrikAreaPerkiraanPerbatasanG()
+    public function solusiIdealPositif()
     {
         $kriterias = Kriteria::all();
         $nilaiAlts = NilaiAlt::all();
         $alternatifs = Alternatif::all();
         $data = $this->normalisasiTerbobot();
-        $benefit_Aplus = [];
-        $benefit_Amin = [];
 
-        $cost_Aplus = [];
-        $cost_Amin = [];
-        
-        foreach ($kriterias as $kriteria) {
-            // Mendapatkan nilai alternatif untuk kriteria tertentu
-            $values = $data['y'];
+        $tipe = Kriteria::pluck('attribute')->toArray();
 
-            if ($kriteria->attribute == 'benefit') {
-                $maxValue = max($values[$kriteria->kode_kriteria]);
-                $minValue = min($values[$kriteria->kode_kriteria]);
-                $benefit_Aplus[$kriteria->kode_kriteria] = $maxValue;
-                $benefit_Amin[$kriteria->kode_kriteria] = $minValue;
-            } elseif ($kriteria->attribute == 'cost') {
-                $maxValue = max($values[$kriteria->kode_kriteria]);
-                $minValue = min($values[$kriteria->kode_kriteria]);
-                $cost_Aplus[$kriteria->kode_kriteria] = $minValue;
-                $cost_Amin[$kriteria->kode_kriteria] = $maxValue;
+        // Membuat array indeks mulai dari 1 hingga jumlah elemen
+        $keys = range(1, count($tipe));
+
+        // Menggabungkan array kunci dan nilai
+        $type = array_combine($keys, $tipe);
+
+        $Aplus = [];
+        $values = $data['y'];
+        // dd($values);
+
+        $result = [];
+        foreach ($values as $rowIndex => $row) {
+            foreach ($row as $colIndex => $value) {
+                $result[$colIndex][$rowIndex] = $value;
             }
         }
-        dd($benefit_Aplus);
-        return compact('alternatifs', 'kriterias', 'nilaiAlts', 'benefit_Aplus', 'benefit_Amin', 'cost_Aplus', 'cost_Amin');
+
+        for ($i = 1; $i <= count($result); $i++) {
+            for ($j = 1; $j <= count($result[$i]); $j++) {
+                $max = max($result[$i]);
+                $min = min($result[$i]);
+                if ($type[$i] == 'Benefit' || $type[$i] == 'benefit') {
+                    $Aplus[$i] = $max;
+                } else if ($type[$i] == 'Cost' || $type[$i] == 'cost') {
+                    $Aplus[$i] = $min;
+                }
+            }
+        }
+        return compact('Aplus');
+    }
+
+    public function solusiIdealNegatif()
+    {
+        $kriterias = Kriteria::all();
+        $nilaiAlts = NilaiAlt::all();
+        $alternatifs = Alternatif::all();
+        $data = $this->normalisasiTerbobot();
+
+        $tipe = Kriteria::pluck('attribute')->toArray();
+
+        // Membuat array indeks mulai dari 1 hingga jumlah elemen
+        $keys = range(1, count($tipe));
+
+        // Menggabungkan array kunci dan nilai
+        $type = array_combine($keys, $tipe);
+
+        $Amin = [];
+        $values = $data['y'];
+        // dd($values);
+
+        $result = [];
+        foreach ($values as $rowIndex => $row) {
+            foreach ($row as $colIndex => $value) {
+                $result[$colIndex][$rowIndex] = $value;
+            }
+        }
+
+        for ($i = 1; $i <= count($result); $i++) {
+            for ($j = 1; $j <= count($result[$i]); $j++) {
+                $max = min($result[$i]);
+                $min = max($result[$i]);
+                if ($type[$i] == 'Benefit' || $type[$i] == 'benefit') {
+                    $Amin[$i] = $max;
+                } else if ($type[$i] == 'Cost' || $type[$i] == 'cost') {
+                    $Amin[$i] = $min;
+                }
+            }
+        }
+        return compact('Amin');
     }
 
 
@@ -137,15 +186,15 @@ class PerhitunganController extends Controller
     {
         $kriterias = Kriteria::all();
         $alternatifs = Alternatif::all();
-        $data_V = $this->normalisasiTerbobot();
-        $data_G = $this->matrikAreaPerkiraanPerbatasanG();
+        $normalisasiTerbobot = $this->normalisasiTerbobot();
+        $solusiIdealPositif = $this->solusiIdealPositif();
         $q = [];
 
         foreach ($alternatifs as $alternatif) {
             foreach ($kriterias as $kriteria) {
-                if (isset($data_V['v'][$alternatif->kode_alternatif][$kriteria->kode_kriteria])) {
-                    $v = $data_V['v'][$alternatif->kode_alternatif][$kriteria->kode_kriteria];
-                    $g = $data_G['g'][$kriteria->kode_kriteria];
+                if (isset($normalisasiTerbobot['v'][$alternatif->kode_alternatif][$kriteria->kode_kriteria])) {
+                    $v = $normalisasiTerbobot['v'][$alternatif->kode_alternatif][$kriteria->kode_kriteria];
+                    $g = $solusiIdealPositif['g'][$kriteria->kode_kriteria];
 
                     $q[$alternatif->kode_alternatif][$kriteria->kode_kriteria] = $v - $g;
                 } else {

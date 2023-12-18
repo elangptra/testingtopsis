@@ -96,9 +96,9 @@
                         {{-- Pengecekan keberadaan atribut 'benefit' --}}
                         @if ($kriteria->attribute == 'benefit')
                             {{-- Pastikan bahwa $benefit_Aplus[$kriteria->kode_kriteria] berisi nilai --}}
-                            <td>{{ number_format($benefit_Aplus[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
+                            <td>{{ number_format($Aplus[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
                         @elseif ($kriteria->attribute == 'cost')
-                            <td>{{ number_format($cost_Amin[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
+                            <td>{{ number_format($Aplus[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
                         @else
                             <td>-</td>
                         @endif
@@ -110,9 +110,9 @@
                         {{-- Pengecekan keberadaan atribut 'benefit' --}}
                         @if ($kriteria->attribute == 'benefit')
                             {{-- Pastikan bahwa $benefit_Amin[$kriteria->kode_kriteria] berisi nilai --}}
-                            <td>{{ number_format($benefit_Amin[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
+                            <td>{{ number_format($Amin[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
                         @elseif ($kriteria->attribute == 'cost')
-                            <td>{{ number_format($cost_Aplus[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
+                            <td>{{ number_format($Amin[$kriteria->kode_kriteria], 3, ',', '.') }}</td>
                         @else
                             <td>-</td>
                         @endif
