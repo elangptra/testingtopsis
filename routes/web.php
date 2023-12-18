@@ -71,7 +71,6 @@ Route::controller(NilaiAltController::class)->prefix('nilaialt')->group(function
 
 Route::controller(PerhitunganController::class)->prefix('normalisasi')->group(function(){
     Route::get('normal','index')->name('normalisasi_nilai');
-    Route::get('hasil','RankingAlternatifs')->name('hasil_ranking');
 });
 
 Route::get('/normalisasi', [App\Http\Controllers\PerhitunganController::class, 'normalisasi'])->name('normalisasi');

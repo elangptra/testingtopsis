@@ -5,7 +5,7 @@
 @section('contents')
     <div class="container">
 
-        <h2>Menghitung Matriks Pembagi</h2>
+        <h1>Menghitung Matriks Pembagi</h1>
         <table class="table table-striped">
             <thead class="thead-dark">
                 <tr>
@@ -21,7 +21,7 @@
             </tbody>
         </table>
 
-        <h2>Normalisasi Nilai Alternatif</h2>
+        <h1>Normalisasi Nilai Alternatif</h1>
         <table class="table table-striped">
             <thead class="thead-dark">
                 <tr>
@@ -50,7 +50,7 @@
             </tbody>
         </table>
 
-        <h2>Normalisasi Nilai Alternatif Terbobot</h2>
+        <h1>Normalisasi Nilai Alternatif Terbobot</h1>
         <table class="table table-striped">
             <thead class="thead-dark">
                 <tr>
@@ -134,6 +134,47 @@
                 @foreach ($Dplus as $alternatif => $jarak)
                     <tr>
                         <td style="text-align: center;">Alternatif {{ $alternatif }}</td>
+                            {{-- Check if the key exists in the $normalisasi array --}}
+                        <td style="text-align: center;"> {{ $jarak }}</td> 
+                        <td style="text-align: center;"> {{ $Dmin[$alternatif] }}</td> 
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <h1>Menentukan Nilai Preferensi (V)</h1>
+        <table class="table table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th style="text-align: center;">Alternatif</th>
+                    <th style="text-align: center;">Nilai Preferensi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($preferensi as $alternatif => $jarak)
+                    <tr>
+                        <td style="text-align: center;">Alternatif {{ $alternatif }}</td>
+                            {{-- Check if the key exists in the $normalisasi array --}}
+                        <td style="text-align: center;"> {{ $jarak }}</td> 
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <h1>Tabel Ranking</h1>
+        <table class="table table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th style="text-align: center;">Alternatif</th>
+                    <th style="text-align: center;">Nilai Preferensi</th>
+                    <th style="text-align: center;">Rank</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($rank as $alternatif => $jarak)
+                    <tr>
+                        <td style="text-align: center;">Alternatif {{ $alternatif }}</td>
+                        <td style="text-align: center;">{{ $preferensi[$alternatif] }}</td>
                             {{-- Check if the key exists in the $normalisasi array --}}
                         <td style="text-align: center;"> {{ $jarak }}</td> 
                     </tr>

@@ -265,8 +265,6 @@ class PerhitunganController extends Controller
     {
         $kriterias = Kriteria::all();
         $data = $this->nilaiPreferensi();
-        $data2 = $this->jarakSolusiIdealNegatif();
-        $data3 = $this->jarakSolusiIdealPositif();
 
         $val = $data['preferensi'];
         arsort($val);

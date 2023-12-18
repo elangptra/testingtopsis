@@ -14,13 +14,6 @@
         <!-- Divider -->
         <hr class="sidebar-divider my-0">
 
-        <!-- Nav Item - Dashboard -->
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('dashboard') }}">
-                <i class="fas fa-home"></i>
-                <span>Dashboard</span></a>
-        </li>
-
         <li class="nav-item">
             <a class="nav-link" href="{{ route('kriteria') }}">
                 <i class="fas fa-plus"></i>
@@ -42,13 +35,7 @@
         <li class="nav-item">
             <a class="nav-link" href="{{ route('normalisasi_nilai') }}">
                 <i class="far fa-chart-bar"></i>
-                <span>Normalisasi</span></a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ route('hasil_ranking') }}">
-                <i class="fas fa-sort-amount-up-alt"></i>
-                <span>Hasil</span></a>
+                <span>Perhitungan</span></a>
         </li>
 
         <!-- Divider -->
