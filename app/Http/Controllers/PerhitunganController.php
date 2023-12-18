@@ -17,8 +17,8 @@ class PerhitunganController extends Controller
         $normalisasiTerbobot = $this->normalisasiTerbobot();
         $solusiIdealPositif = $this->solusiIdealPositif();
         $solusiIdealNegatif = $this->solusiIdealNegatif();
-        $data_Q = $this->matrikJarakPerkiraanPerbatasanQ();
-        return view('normalisasi.index', array_merge($data, $data_pembagi, $normalisasiTerbobot, $solusiIdealPositif, $solusiIdealNegatif, $data_Q));
+        $jarakSolusiIdealPositif = $this->jarakSolusiIdealPositif();
+        return view('normalisasi.index', array_merge($data, $data_pembagi, $normalisasiTerbobot, $solusiIdealPositif, $solusiIdealNegatif,$jarakSolusiIdealPositif));
     }
 
     function pembagiNM()
@@ -182,26 +182,34 @@ class PerhitunganController extends Controller
     }
 
 
-    public function matrikJarakPerkiraanPerbatasanQ()
+    public function jarakSolusiIdealPositif()
     {
         $kriterias = Kriteria::all();
-        $alternatifs = Alternatif::all();
-        $normalisasiTerbobot = $this->normalisasiTerbobot();
-        $solusiIdealPositif = $this->solusiIdealPositif();
-        $q = [];
+        $data = $this->normalisasiTerbobot();
+        $data2 = $this->solusiIdealPositif();
 
-        foreach ($alternatifs as $alternatif) {
-            foreach ($kriterias as $kriteria) {
-                if (isset($normalisasiTerbobot['v'][$alternatif->kode_alternatif][$kriteria->kode_kriteria])) {
-                    $v = $normalisasiTerbobot['v'][$alternatif->kode_alternatif][$kriteria->kode_kriteria];
-                    $g = $solusiIdealPositif['g'][$kriteria->kode_kriteria];
+        $values = $data['y'];
+        $val = $data2['Aplus'];
 
-                    $q[$alternatif->kode_alternatif][$kriteria->kode_kriteria] = $v - $g;
-                } else {
-                }
+        $result = [];
+        foreach ($values as $rowIndex => $row) {
+            foreach ($row as $colIndex => $value) {
+                $result[$colIndex][$rowIndex] = $value;
             }
         }
-        return compact('alternatifs', 'kriterias', 'q');
+
+        $Dplus = [];
+        for ($i = 1; $i <= count($result[1]); $i++) {
+            $jarak = 0;
+
+            for ($j = 1; $j <= count($result); $j++) {
+                $jarak += pow(($val[$j] - $result[$j][$i]), 2);
+            }
+            $Dplus[$i] = number_format(sqrt($jarak), 3);
+
+        }
+        // dd($Dplus);
+        return compact('Dplus');
     }
     public function countHasilQ($q)
     {
@@ -222,7 +230,7 @@ class PerhitunganController extends Controller
     {
         $kriterias = Kriteria::all();
         $alternatifs = Alternatif::all();
-        $data_Q = $this->matrikJarakPerkiraanPerbatasanQ();
+        $data_Q = $this->jarakSolusiIdealPositif();
         $rank = $this->countHasilQ($data_Q['q']);
 
         $rank = [];
